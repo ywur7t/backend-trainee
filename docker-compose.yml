@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: avito-kitchen-postgres
+    environment:
+      POSTGRES_DB: kitchen
+      POSTGRES_USER: kitchen
+      POSTGRES_PASSWORD: kitchen
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kitchen -d kitchen"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  restaurant-mock:
+    build: ./restaurant-mock
+    container_name: avito-kitchen-restaurant-mock
+    ports:
+      - "8081:8081"
+
+  kitchen-api:
+    build:
+      context: ./kitchen-api
+    container_name: avito-kitchen-api
+    environment:
+      DATABASE_URL: postgresql+asyncpg://kitchen:kitchen@postgres:5432/kitchen
+      RESTAURANT_SERVICE_URL: http://restaurant-mock:8081
+    ports:
+      - "8004:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      restaurant-mock:
+        condition: service_started
+  web:
+    build: ./web
+    ports:
+      - "3000:3000"
+    depends_on:
+      - kitchen-api
+volumes:
+  postgres_data:
+
