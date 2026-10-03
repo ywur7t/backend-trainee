@@ -1,0 +1,44 @@
+@startuml
+title Avito.Kitchen — C4 Level 3 — Kitchen API Components
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(customer, "Пользователь", "Использует API для просмотра ресторанов, меню и оформления заказа.")
+
+System_Ext(restaurant, "Restaurant Mock API", "Внешнее API заведения.")
+
+ContainerDb(db, "PostgreSQL", "PostgreSQL 17", "Основное хранилище данных.")
+
+Container_Boundary(api, "Kitchen API") {
+
+    Component(restaurant_api, "Restaurants API", "FastAPI Router", "Получение ресторанов, меню и запуск синхронизации.")
+
+    Component(order_api, "Orders API", "FastAPI Router", "Создание заказа, получение заказа и изменение статуса.")
+
+    Component(order_service, "OrderService", "Application Service", "Проверяет данные заказа, создаёт заказ и рассчитывает итоговую стоимость.")
+
+    Component(sync_service, "RestaurantSyncService", "Application Service", "Получает данные ресторана и меню из внешнего API и синхронизирует их с БД.")
+
+    Component(restaurant_client, "RestaurantClient", "httpx", "HTTP-клиент для взаимодействия с API заведения.")
+
+    Component(database_models, "SQLAlchemy Models", "SQLAlchemy ORM", "Модели предметной области и таблицы БД.")
+}
+
+Rel(customer, restaurant_api, "Получает рестораны и меню", "HTTP/JSON")
+Rel(customer, order_api, "Создаёт и получает заказы", "HTTP/JSON")
+
+Rel(restaurant_api, sync_service, "Запускает синхронизацию")
+Rel(sync_service, restaurant_client, "Запрашивает ресторан и меню")
+Rel(restaurant_client, restaurant, "Получает данные", "HTTP/JSON")
+
+Rel(order_api, order_service, "Передаёт данные заказа")
+
+Rel(restaurant_api, database_models, "Читает")
+Rel(order_service, database_models, "Читает и изменяет")
+Rel(sync_service, database_models, "Читает и изменяет")
+
+Rel(database_models, db, "SQL", "asyncpg")
+
+@enduml

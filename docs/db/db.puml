@@ -1,0 +1,145 @@
+@startuml
+title Avito.Kitchen — Database Schema
+
+hide methods
+hide stereotypes
+
+skinparam linetype ortho
+skinparam class {
+BackgroundColor White
+BorderColor #333333
+ArrowColor #555555
+}
+
+entity "customers" as customers {
+* id : BIGINT <<PK>>
+--
+external_id : VARCHAR <<UK>>
+}
+
+entity "addresses" as addresses {
+* id : BIGINT <<PK>>
+--
+customer_id : BIGINT <<FK>>
+city : VARCHAR
+street : VARCHAR
+house : VARCHAR
+apartment : VARCHAR
+floor : VARCHAR
+}
+
+entity "restaurants" as restaurants {
+* id : BIGINT <<PK>>
+--
+external_id : VARCHAR <<UK>>
+name : VARCHAR
+}
+
+entity "menu_categories" as menu_categories {
+* id : BIGINT <<PK>>
+--
+restaurant_id : BIGINT <<FK>>
+external_id : VARCHAR
+name : VARCHAR
+}
+
+entity "menu_items" as menu_items {
+* id : BIGINT <<PK>>
+--
+restaurant_id : BIGINT <<FK>>
+category_id : BIGINT <<FK>>
+external_id : VARCHAR
+name : VARCHAR
+description : TEXT
+price : NUMERIC
+is_available : BOOLEAN
+}
+
+entity "delivery_types" as delivery_types {
+* id : BIGINT <<PK>>
+--
+name : VARCHAR <<UK>>
+}
+
+entity "order_statuses" as order_statuses {
+* id : BIGINT <<PK>>
+--
+name : VARCHAR <<UK>>
+}
+
+entity "orders" as orders {
+* id : BIGINT <<PK>>
+--
+external_id : VARCHAR <<UK>>
+customer_id : BIGINT <<FK>>
+restaurant_id : BIGINT <<FK>>
+address_id : BIGINT <<FK>>
+delivery_type_id : BIGINT <<FK>>
+status_id : BIGINT <<FK>>
+
+```
+delivery_city : VARCHAR
+delivery_street : VARCHAR
+delivery_house : VARCHAR
+delivery_apartment : VARCHAR
+delivery_floor : VARCHAR
+
+total_price : NUMERIC
+created_at : TIMESTAMP
+updated_at : TIMESTAMP
+```
+
+}
+
+entity "order_items" as order_items {
+* id : BIGINT <<PK>>
+--
+order_id : BIGINT <<FK>>
+menu_item_id : BIGINT <<FK>>
+name : VARCHAR
+quantity : INTEGER
+price_per_item : NUMERIC
+}
+
+customers ||--o{ addresses : has
+
+restaurants ||--o{ menu_categories : contains
+restaurants ||--o{ menu_items : offers
+menu_categories ||--o{ menu_items : groups
+
+customers ||--o{ orders : creates
+restaurants ||--o{ orders : receives
+
+addresses ||--o{ orders : used_for
+
+delivery_types ||--o{ orders : defines
+order_statuses ||--o{ orders : has
+
+orders ||--|{ order_items : contains
+menu_items ||--o{ order_items : referenced_by
+
+note right of restaurants
+external_id связывает ресторан
+с внешней системой заведения.
+end note
+
+note right of customers
+external_id идентифицирует
+пользователя во внешнем
+контексте площадки.
+end note
+
+note right of order_items
+name и price_per_item —
+snapshot данных блюда
+на момент оформления заказа.
+end note
+
+note bottom of orders
+Адрес доставки дублируется
+в snapshot-полях, чтобы изменение
+адреса пользователя не изменило
+историю существующего заказа.
+end note
+
+@enduml

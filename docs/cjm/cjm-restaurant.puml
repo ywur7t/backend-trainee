@@ -1,0 +1,75 @@
+@startuml
+title Avito.Kitchen — Restaurant CJM
+
+skinparam backgroundColor white
+skinparam activity {
+    BackgroundColor #F5F5F5
+    BorderColor #333333
+    FontColor #222222
+    ArrowColor #555555
+}
+
+start
+
+:Ресторан подключается к Avito.Kitchen;
+
+:Предоставляет данные ресторана;
+
+:Предоставляет меню;
+
+:Avito.Kitchen синхронизирует ресторан;
+note right
+POST /api/v1/restaurants/sync
+end note
+
+:Ресторан становится доступен пользователям;
+
+:Пользователь оформляет заказ;
+
+:Avito.Kitchen создаёт заказ;
+
+:Ресторан получает заказ;
+
+if (Может выполнить заказ?) then (Да)
+
+    :Принимает заказ;
+
+    :Статус = CONFIRMED;
+
+    :Начинает приготовление;
+
+    :Статус = PREPARING;
+
+    :Заказ готов;
+
+    :Статус = READY;
+
+    if (Тип получения — доставка?) then (Да)
+
+        :Передаёт заказ в доставку;
+
+        :Статус = DELIVERING;
+
+        :Заказ доставлен;
+
+    else (Нет)
+
+        :Ожидает клиента;
+
+        :Клиент забирает заказ;
+
+    endif
+
+    :Статус = COMPLETED;
+
+else (Нет)
+
+    :Отклоняет заказ;
+
+    :Статус = REJECTED;
+
+endif
+
+stop
+
+@enduml

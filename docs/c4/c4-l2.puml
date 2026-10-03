@@ -1,0 +1,25 @@
+@startuml
+title Avito.Kitchen — C4 Level 2 — Container Diagram
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(customer, "Пользователь", "Просматривает рестораны и меню, оформляет и отслеживает заказ.")
+
+System_Boundary(kitchen, "Avito.Kitchen") {
+
+    Container(api, "Kitchen API", "Python, FastAPI", "Основной API сервиса. Предоставляет API для клиентской части, управляет ресторанами, меню и заказами.")
+
+    ContainerDb(db, "PostgreSQL", "PostgreSQL 17", "Хранит рестораны, меню, пользователей, адреса, заказы и справочники.")
+}
+
+System_Ext(restaurant, "Restaurant Mock API", "Python, FastAPI", "Пример внешнего заведения. Предоставляет данные ресторана и меню.")
+
+Rel(customer, api, "Просматривает рестораны и меню,\nсоздаёт и получает заказы", "HTTP/JSON")
+
+Rel(api, db, "Читает и изменяет данные", "SQL/asyncpg")
+
+Rel(api, restaurant, "Синхронизирует ресторан и меню", "HTTP/JSON")
+
+@enduml

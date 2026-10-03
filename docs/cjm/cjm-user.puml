@@ -1,0 +1,104 @@
+@startuml
+title Avito.Kitchen — Customer CJM
+
+skinparam backgroundColor white
+skinparam activity {
+    BackgroundColor #F5F5F5
+    BorderColor #333333
+    FontColor #222222
+    ArrowColor #555555
+}
+
+start
+
+:Открывает Avito.Kitchen;
+
+:Получает список ресторанов;
+note right
+GET /api/v1/restaurants
+end note
+
+:Выбирает ресторан;
+
+:Просматривает меню;
+note right
+GET /api/v1/restaurants/{restaurant_id}/menu
+end note
+
+if (Нашёл нужные блюда?) then (Да)
+
+    :Выбирает блюда;
+    :Указывает количество;
+
+    :Формирует заказ;
+
+    :Выбирает тип получения;
+
+    if (Доставка?) then (Да)
+
+        :Выбирает адрес доставки;
+
+        if (Адрес существует?) then (Да)
+            :Использует сохранённый адрес;
+        else (Нет)
+            :Указывает новый адрес;
+        endif
+
+    else (Нет)
+        :Выбирает самовывоз;
+    endif
+
+    :Отправляет заказ;
+    note right
+    POST /api/v1/orders
+    end note
+
+    if (Заказ создан?) then (Да)
+
+        :Получает номер заказа;
+
+        :Просматривает заказ;
+        note right
+        GET /api/v1/orders/{order_id}
+        end note
+
+        :Ожидает обработки рестораном;
+
+        if (Заказ принят?) then (Да)
+
+            :Отслеживает статус заказа;
+
+            :Заказ готов;
+
+            if (Доставка?) then (Да)
+                :Получает заказ;
+            else (Нет)
+                :Забирает заказ самостоятельно;
+            endif
+
+            :Заказ завершён;
+
+        else (Нет)
+
+            :Получает отказ;
+
+        endif
+
+    else (Нет)
+
+        :Получает ошибку;
+        :Исправляет данные заказа;
+        :Повторяет оформление;
+
+    endif
+
+else (Нет)
+
+    :Возвращается к списку ресторанов;
+    :Выбирает другой ресторан;
+
+endif
+
+stop
+
+@enduml
